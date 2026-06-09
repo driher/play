@@ -19,7 +19,6 @@ export default function Home() {
   const headline = berita[0];
   const list = berita.slice(1, 7);
   const sidebar = berita.slice(7, 12);
-  const featuredItems = berita.slice(0, 4); // ✅ TAMBAHAN INI
 
   return (
     <main className="bg-gray-100 min-h-screen">

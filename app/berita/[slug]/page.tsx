@@ -1,0 +1,183 @@
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import ShareButtons from "@/components/ShareButtons";
+
+/* =========================
+   CACHE (ISR)
+========================= */
+export const revalidate = 300;
+
+/* =========================
+   FORMAT TANGGAL
+========================= */
+function formatTanggalIndonesia(dateString: string) {
+  try {
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return "";
+  }
+}
+
+/* =========================
+   FETCH DETAIL BERITA
+========================= */
+async function getBerita(slug: string) {
+  try {
+    const res = await fetch(
+      `https://cms.pentas.tv/api/detail.php?slug=${encodeURIComponent(slug)}`,
+      { cache: "no-store" }
+    );
+
+    const json = await res.json();
+
+    return json?.data || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+/* =========================
+   FETCH TRENDING
+========================= */
+async function getTrending() {
+  try {
+    const res = await fetch(
+      "https://cms.pentas.tv/api/berita.php",
+      { cache: "no-store" }
+    );
+
+    const json = await res.json();
+
+    return json?.data || [];
+  } catch {
+    return [];
+  }
+}
+
+/* =========================
+   PAGE
+========================= */
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  const berita = await getBerita(slug);
+  const trending = await getTrending();
+
+  if (!berita) {
+    notFound();
+  }
+
+  return (
+    <main className="max-w-6xl mx-auto px-4 py-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {/* =========================
+           ARTIKEL
+        ========================= */}
+        <article className="md:col-span-2">
+
+          <div className="text-xs text-red-600 font-bold mb-2">
+            {berita.nama_kategori}
+          </div>
+
+          <h1 className="text-3xl font-bold mb-3">
+            {berita.judul}
+          </h1>
+
+          <div className="text-sm text-gray-500 mb-4">
+            ✍ {berita.author} • 👁 {berita.views} • 🕒{" "}
+            {formatTanggalIndonesia(berita.publish_date)}
+          </div>
+
+<ShareButtons title={berita.judul} />
+
+
+          {berita.thumbnail && (
+            <div className="mb-6">
+              <Image
+                src={berita.thumbnail}
+                alt={berita.judul}
+                width={1200}
+                height={600}
+                className="w-full h-auto rounded-lg"
+                priority
+              />
+	      <p className="italic">
+            {berita.media.caption} - {berita.media.credit && `Credit: ${berita.media.credit}`}
+                    {berita.media.source && ` | Source: ${berita.media.source}`}
+          </p>
+            </div>
+          )}
+
+          <div
+  className="
+      prose prose-lg mt-10 max-w-none text-gray-700
+      prose-headings:text-gray-900
+      prose-headings:font-bold
+      prose-p:leading-8
+      prose-p:text-gray-700
+      prose-a:text-green-700
+      prose-img:rounded-2xl
+      prose-img:shadow-md
+      prose-strong:text-gray-900
+      prose-blockquote:border-green-600
+      prose-blockquote:text-gray-700
+      prose-li:marker:text-green-700
+      [&>*]:mb-4
+            [&>p]:mb-5
+
+            [&>h2]:mt-8 [&>h2]:mb-4 [&>h2]:text-2xl [&>h2]:font-bold
+            [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:text-xl [&>h3]:font-semibold
+
+            [&>ul]:mb-5 [&>ul]:pl-5 [&>ul]:list-disc
+            [&>ol]:mb-5 [&>ol]:pl-5 [&>ol]:list-decimal
+
+            [&_img]:rounded-xl
+            [&_img]:w-full
+
+            [&>p>a]:text-orange-500 [&>p>a]:underline
+    "
+  dangerouslySetInnerHTML={{
+    __html: berita.isi || "",
+  }}
+/>
+        </article>
+
+        {/* =========================
+           SIDEBAR TRENDING
+        ========================= */}
+        <aside className="bg-gray-100 p-4 rounded-lg sticky top-20 h-fit">
+
+  <h2 className="font-bold text-red-600 mb-3">
+    🔥 Trending
+  </h2>
+
+  <div className="space-y-0 divide-y divide-gray-300">
+
+    {trending?.slice(0, 10).map((item: any) => (
+      <Link
+        key={item.id}
+        href={`/berita/${item.slug}`}
+        className="block text-sm hover:text-red-600 transition py-2"
+      >
+        {item.judul}
+      </Link>
+    ))}
+
+  </div>
+
+</aside>
+      </div>
+    </main>
+  );
+}

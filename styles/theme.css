@@ -1,0 +1,9 @@
+:root {
+  --primary: #0b1f3a;   /* biru tua */
+  --accent: #e11d48;    /* merah cabe */
+  --bg: #f5f7fb;
+}
+
+body {
+  background: var(--bg);
+}
