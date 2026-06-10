@@ -5,8 +5,6 @@ import { useEffect, useRef, useState } from "react";
 const STREAM_URL = "http://c4.siar.us:8092/live";
 const ICECAST = "http://c4.siar.us:8092/status-json.xsl";
 
-const DEFAULT_COVER = "/logo_radio_sehati.png";
-
 export default function Home() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -17,8 +15,9 @@ export default function Home() {
   const [artist, setArtist] = useState("-");
   const [listeners, setListeners] = useState(0);
 
-  const [cover, setCover] = useState(DEFAULT_COVER);
+  const [cover, setCover] = useState("/cover.jpg");
 
+  // ▶️ PLAY / PAUSE
   const toggle = async () => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -27,7 +26,7 @@ export default function Home() {
       if (!playing) {
         setBuffering(true);
 
-        audio.volume = 1;
+        audio.load(); // penting untuk stabil di beberapa browser
         await audio.play();
 
         setPlaying(true);
@@ -43,33 +42,30 @@ export default function Home() {
     }
   };
 
-  const fetchCover = async (artistName: string, songTitle: string) => {
+  // 🖼️ COVER (safe version)
+  const fetchCover = async (a: string, t: string) => {
     try {
-      if (!artistName || artistName === "-") {
-        setCover(DEFAULT_COVER);
-        return;
-      }
+      if (!a || a === "-") return;
 
       const res = await fetch(
         `https://itunes.apple.com/search?term=${encodeURIComponent(
-          `${artistName} ${songTitle}`
+          a + " " + t
         )}&entity=song&limit=1`
       );
 
       const data = await res.json();
-
       const img = data?.results?.[0]?.artworkUrl100;
 
       if (img) {
-        setCover(img.replace("100x100", "600x600"));
-      } else {
-        setCover(DEFAULT_COVER);
+        const highRes = img.replace("100x100", "600x600");
+        setCover(highRes);
       }
     } catch {
-      setCover(DEFAULT_COVER);
+      // fallback diam, jangan spam state
     }
   };
 
+  // 📡 ICECAST META (SAFE PARSER)
   const fetchMeta = async () => {
     try {
       const res = await fetch(ICECAST);
@@ -86,47 +82,42 @@ export default function Home() {
         live?.yp_currently_playing ||
         "Radio Sehati";
 
-      let artistName = "-";
-      let songTitle = raw;
+      let art = "-";
+      let song = raw;
 
       if (typeof raw === "string" && raw.includes(" - ")) {
         const parts = raw.split(" - ");
-        artistName = parts[0]?.trim();
-        songTitle = parts.slice(1).join(" - ").trim();
+        art = parts[0]?.trim();
+        song = parts.slice(1).join(" - ").trim();
       }
 
-      setArtist(artistName);
-      setTitle(songTitle);
+      setArtist(art);
+      setTitle(song);
       setListeners(live?.listeners ?? 0);
 
-      fetchCover(artistName, songTitle);
+      fetchCover(art, song);
     } catch (err) {
       console.log("ICECAST ERROR:", err);
-
-      setTitle("Radio Sehati");
-      setArtist("-");
-      setCover(DEFAULT_COVER);
     }
   };
 
   useEffect(() => {
     fetchMeta();
-
     const interval = setInterval(fetchMeta, 10000);
-
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-amber-200 via-yellow-200 to-amber-100 text-neutral-900 px-4">
 
-      <div className="absolute inset-0 bg-black/20" />
+      {/* overlay */}
+      <div className="absolute inset-0 bg-black/25" />
 
       <div className="relative w-full max-w-md">
 
-        <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-8 shadow-2xl text-center">
+        <div className="bg-white/55 backdrop-blur-xl border border-white/40 rounded-3xl p-8 shadow-xl text-center">
 
-          <h1 className="text-2xl font-bold text-amber-700">
+          <h1 className="text-2xl font-semibold tracking-wide">
             Radio Streaming Sehati
           </h1>
 
@@ -134,53 +125,55 @@ export default function Home() {
             Live Audio Broadcast
           </p>
 
+          {/* COVER */}
           <div className="flex justify-center my-6">
             <img
               src={cover}
-              alt="Album Cover"
-              className="w-56 h-56 rounded-2xl object-cover shadow-xl border border-white/40"
+              alt="cover"
+              className="w-56 h-56 rounded-2xl object-cover shadow-lg border border-white/40"
               onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  DEFAULT_COVER;
+                (e.target as HTMLImageElement).src = "/cover.jpg";
               }}
             />
           </div>
 
+          {/* STATUS */}
           <span
-            className={`inline-block px-4 py-1 rounded-full text-xs font-semibold ${
+            className={`px-4 py-1 rounded-full text-xs font-medium ${
               playing
-                ? "bg-red-500 text-white"
-                : "bg-white text-neutral-700"
+                ? "bg-amber-500 text-white"
+                : "bg-white/70 text-neutral-600"
             }`}
           >
-            {playing ? "🔴 LIVE ON AIR" : "⚪ OFF AIR"}
+            {playing ? "LIVE ON AIR" : "OFF AIR"}
           </span>
 
-          <div className="mt-6 bg-white/60 rounded-2xl p-4 border border-white/30">
-
-            <p className="text-lg font-bold text-amber-700 truncate">
+          {/* NOW PLAYING */}
+          <div className="mt-6 bg-white/50 rounded-2xl p-4 border border-white/40">
+            <p className="text-lg font-semibold text-amber-700 truncate">
               {title}
             </p>
 
-            <p className="text-sm text-neutral-700 mt-1 truncate">
+            <p className="text-sm text-neutral-700 mt-1">
               {artist}
             </p>
 
             <p className="text-xs text-neutral-500 mt-2">
-              👥 {listeners} listeners
+              {listeners} listeners
             </p>
-
           </div>
 
+          {/* BUTTON */}
           <button
             onClick={toggle}
-            className="mt-6 w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-lg transition active:scale-95"
+            className="mt-6 w-full py-3 rounded-xl font-semibold transition active:scale-95 shadow-lg bg-amber-500 text-white hover:bg-amber-600"
           >
-            {playing ? "⏸ Pause Radio" : "▶ Play Radio"}
+            {playing ? "Pause Radio" : "Play Radio"}
           </button>
 
+          {/* BUFFER */}
           {buffering && (
-            <p className="text-xs text-amber-700 mt-3">
+            <p className="text-xs mt-3 text-amber-700">
               Connecting stream...
             </p>
           )}
@@ -192,26 +185,8 @@ export default function Home() {
         </div>
       </div>
 
-      <audio
-        ref={audioRef}
-        src={STREAM_URL}
-        preload="none"
-        onPlaying={() => {
-          setPlaying(true);
-          setBuffering(false);
-        }}
-        onWaiting={() => {
-          setBuffering(true);
-        }}
-        onPause={() => {
-          setPlaying(false);
-        }}
-        onError={(e) => {
-          console.log("AUDIO ERROR:", e);
-          setPlaying(false);
-          setBuffering(false);
-        }}
-      />
+      {/* AUDIO */}
+      <audio ref={audioRef} src={STREAM_URL} preload="none" />
     </div>
   );
 }

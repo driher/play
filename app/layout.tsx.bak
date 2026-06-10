@@ -1,4 +1,7 @@
-import "./globals.css";
+export const metadata = {
+  title: "Radio Sehati",
+  description: "Streaming Radio Sehati Online",
+};
 
 export default function RootLayout({
   children,
