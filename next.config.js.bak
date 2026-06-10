@@ -12,6 +12,15 @@ const nextConfig = {
     ],
   },
 
+  async redirects() {
+    return [
+      {
+        source: "/:category/:slug",
+        destination: "/berita/:slug",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
