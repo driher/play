@@ -41,32 +41,19 @@ export default function Navbar() {
 
     // MENU
     async function loadKategori() {
-  try {
-    const res = await fetch(
-      "https://cms.pentas.tv/api/kategori_menu.php"
-    );
+      try {
+        const res = await fetch("https://cms.pentas.tv/api/kategori_menu.php");
+        const data = await res.json();
 
-    const data = await res.json();
+        const kategori = (data?.data || [])
+          .filter((item: any) => Number(item.urutan) > 0)
+          .sort((a: any, b: any) => Number(a.urutan) - Number(b.urutan));
 
-    console.log("MENU DATA:", data);
-
-    const kategori = Array.isArray(data)
-      ? data
-      : data.data || [];
-
-    setMenu(
-      kategori
-        .filter((item: any) => Number(item.urutan) > 0)
-        .sort(
-          (a: any, b: any) =>
-            Number(a.urutan) - Number(b.urutan)
-        )
-    );
-  } catch (err) {
-    console.error(err);
-    setMenu([]);
-  }
-}
+        if (isMounted) setMenu(kategori);
+      } catch {
+        if (isMounted) setMenu([]);
+      }
+    }
 
     // FX MARKET
     async function loadFxMarket() {

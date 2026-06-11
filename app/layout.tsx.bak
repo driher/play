@@ -123,13 +123,6 @@ export default function RootLayout({
       </head>
 
       <body className="min-h-full flex flex-col bg-white text-gray-900">
-      <Script
-  async
-  strategy="afterInteractive"
-  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1691990022768286"
-  crossOrigin="anonymous"
-/>
-
         {/* GLOBAL NAVBAR */}
         <NavBar />
 
@@ -150,15 +143,6 @@ export default function RootLayout({
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-DEXX0XSCKX');
-`}
-</Script>
-
-<Script id="auto-ads" strategy="afterInteractive">
-{`
-  (adsbygoogle = window.adsbygoogle || []).push({
-    google_ad_client: "ca-pub-1691990022768286",
-    enable_page_level_ads: true
-  });
 `}
 </Script>
 
