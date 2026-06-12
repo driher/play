@@ -9,19 +9,12 @@ interface Item {
   publish_date?: string | null;
 }
 
-export default function FeaturedCards({
-  items,
-}: {
-  items: Item[];
-}) {
-  if (!items || items.length === 0) return null;
-
-  const limitedItems = items.slice(1, 4);
-
 /* =========================
    FORMAT TANGGAL
 ========================= */
-function formatTanggalIndonesia(dateString?: string) {
+function formatTanggalIndonesia(
+  dateString?: string | null
+) {
   if (!dateString) return "-";
 
   const date = new Date(dateString);
@@ -37,12 +30,21 @@ function formatTanggalIndonesia(dateString?: string) {
     minute: "2-digit",
   });
 }
+
+export default function FeaturedCards({
+  items,
+}: {
+  items: Item[];
+}) {
+  if (!items || items.length === 0) return null;
+
+  const limitedItems = items.slice(1, 4);
+
   return (
     <section className="w-full py-10">
-      
-      {/* CONTAINER UTAMA */}
+
       <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8">
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
           {limitedItems.map((item) => (
@@ -60,21 +62,26 @@ function formatTanggalIndonesia(dateString?: string) {
               </div>
 
               <div className="p-4">
+
                 <h3 className="text-sm font-semibold leading-snug line-clamp-2 text-gray-900 group-hover:text-red-600 transition">
                   {item.judul}
                 </h3>
 
-<p className="text-gray-500 text-xs mt-3">
-  {formatTanggalIndonesia(
-    item.publish_date || item.created_at
-  )}
-</p>
+                <p className="text-gray-500 text-xs mt-3">
+                  {formatTanggalIndonesia(
+                    item.publish_date ??
+                    item.created_at
+                  )}
+                </p>
+
               </div>
             </Link>
           ))}
 
         </div>
+
       </div>
+
     </section>
   );
 }
