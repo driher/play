@@ -5,8 +5,7 @@ interface Item {
   judul: string;
   slug: string;
   thumbnail: string;
-  created_at?: string | null;
-  publish_date?: string | null;
+  created_at: string;
 }
 
 export default function FeaturedCards({
