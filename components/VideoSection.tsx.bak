@@ -1,0 +1,51 @@
+import VideoPlayer from "./VideoPlayer";
+
+async function getVideos() {
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/youtube.php`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  const result =
+    await res.json();
+
+  return result.data || [];
+}
+
+export default async function VideoSection() {
+
+  const videos =
+    await getVideos();
+
+  if (!videos.length)
+    return null;
+
+  return (
+    <section className="my-10">
+
+      <div className="flex items-center justify-between mb-6">
+
+        <h2 className="text-3xl font-bold">
+          🎥 Video
+        </h2>
+
+        <a
+          href="https://www.youtube.com/@pentastv/videos"
+          target="_blank"
+          className="text-red-600 font-semibold"
+        >
+          Semua Video →
+        </a>
+
+      </div>
+
+      <VideoPlayer
+        videos={videos}
+      />
+
+    </section>
+  );
+}
