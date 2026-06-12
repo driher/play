@@ -9,6 +9,25 @@ import FeaturedCards from "@/components/FeaturedCards";
 export default function Home() {
   const [berita, setBerita] = useState<any[]>([]);
 
+/* =========================
+   FORMAT TANGGAL
+========================= */
+function formatTanggalIndonesia(dateString?: string) {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) return "-";
+
+  return date.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
   useEffect(() => {
     fetch("https://cms.pentas.tv/api/berita.php?page=1&limit=12")
       .then((res) => res.json())
@@ -42,9 +61,11 @@ export default function Home() {
                     </h2>
                   </Link>
 
-                  <p className="text-gray-500 text-sm mt-2">
-                    {formatDateTV(headline.created_at)}
-                  </p>
+<p className="text-gray-500 text-sm mt-2">
+  {formatTanggalIndonesia(
+    headline.publish_date || headline.created_at
+  )}
+</p>
                 </div>
               </>
             )}
@@ -73,7 +94,7 @@ export default function Home() {
                   </Link>
 
                   <p className="text-xs text-gray-500">
-                    {formatDateTV(item.created_at)}
+                    {formatTanggalIndonesia(item.publish_date)}
                   </p>
                 </div>
               </div>

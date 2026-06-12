@@ -21,9 +21,10 @@ function formatTanggalIndonesia(dateString?: string) {
     day: "numeric",
     month: "long",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
-
 /* =========================
    FETCH DETAIL BERITA
 ========================= */
@@ -42,7 +43,24 @@ async function getBerita(slug: string) {
 
     const json = await res.json();
 
-    return json?.data || null;
+    const data = json?.data || null;
+
+    if (!data) return null;
+
+    // =========================
+    // NORMALISASI KATEGORI
+    // =========================
+    const kategori =
+      Array.isArray(data.kategori)
+        ? data.kategori
+        : data.nama_kategori
+        ? [data.nama_kategori]
+        : [];
+
+    return {
+      ...data,
+      kategori,
+    };
   } catch {
     return null;
   }
@@ -70,6 +88,37 @@ async function getTrending() {
   } catch {
     return [];
   }
+}
+
+/* =========================
+   DISCLAIMER
+========================= */
+function DisclaimerPentasTV() {
+  return (
+    <div className="mt-10 border-t pt-6 text-xs text-gray-500 leading-relaxed">
+      <p className="font-semibold mb-2">Disclaimer</p>
+
+      <p>
+        Seluruh informasi yang dipublikasikan di <b>pentas.tv</b> disediakan hanya
+        untuk tujuan informasi umum. Redaksi berupaya menyajikan informasi yang
+        akurat, terkini, dan dapat dipertanggungjawabkan, namun tidak memberikan
+        jaminan apa pun, baik secara tersurat maupun tersirat, mengenai
+        kelengkapan, keakuratan, keandalan, atau kesesuaian informasi tersebut.
+      </p>
+
+      <p className="mt-2">
+        Segala tindakan yang Anda lakukan berdasarkan informasi di situs ini
+        sepenuhnya merupakan tanggung jawab Anda sendiri. <b>pentas.tv</b> tidak
+        bertanggung jawab atas segala bentuk kerugian atau kerusakan yang timbul
+        akibat penggunaan informasi dari situs ini.
+      </p>
+
+      <p className="mt-2">
+        Jika terdapat kekeliruan atau ingin mengajukan hak jawab/koreksi, silakan
+        menghubungi redaksi melalui halaman resmi <b>pentas.tv</b>.
+      </p>
+    </div>
+  );
 }
 
 /* =========================
@@ -159,7 +208,13 @@ export default async function Page({
         <article className="md:col-span-2">
 
           <div className="text-xs text-red-600 font-bold uppercase mb-2">
-            {berita.nama_kategori}
+            <div className="text-xs text-red-600 font-bold uppercase mb-2 flex flex-wrap gap-2">
+  {berita.kategori?.map((kat: string, i: number) => (
+    <span key={i} className="bg-red-100 px-2 py-1 rounded">
+      {kat}
+    </span>
+  ))}
+</div>
           </div>
 
           <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-4">
@@ -167,17 +222,21 @@ export default async function Page({
           </h1>
 
           <div className="flex flex-wrap gap-3 text-sm text-gray-500 mb-5">
-            <span>✍ {berita.author || "Pentas TV"}</span>
-            <span>👁 {berita.views || 0}</span>
-            <span>
-              🕒{" "}
-              {formatTanggalIndonesia(
-                berita.publish_date ||
-                  berita.created_at ||
-                  berita.tanggal
-              )}
-            </span>
-          </div>
+  
+  <span>✍ {berita.author || "Pentas TV"}</span>
+
+  <span>👁 {berita.views || 0}</span>
+
+  <span>
+ <span>
+  🕒{" "}
+  {formatTanggalIndonesia(
+    berita.publish_date || berita.created_at
+  )}
+</span>
+  </span>
+
+</div>
 
           <ShareButtons title={berita.judul} />
 
@@ -209,26 +268,39 @@ export default async function Page({
             </div>
           )}
 
-          <div
-            className="
-              prose
-              prose-lg
-              max-w-none
-              prose-headings:font-bold
-              prose-headings:text-gray-900
-              prose-p:text-gray-700
-              prose-p:leading-8
-              prose-a:text-red-600
-              prose-img:rounded-xl
-              prose-img:shadow-md
-              prose-blockquote:border-red-600
-              prose-blockquote:text-gray-700
-              prose-li:marker:text-red-600
-            "
-            dangerouslySetInnerHTML={{
-              __html: berita.isi || "",
-            }}
-          />
+   <div
+  className="
+    prose
+    prose-lg
+    max-w-none
+    prose-headings:font-bold
+    prose-headings:text-gray-900
+    prose-p:text-gray-700
+    prose-p:leading-8
+    prose-a:text-red-600
+    prose-img:rounded-xl
+    prose-img:shadow-md
+    prose-blockquote:border-red-600
+    prose-blockquote:text-gray-700
+    prose-li:marker:text-red-600
+    [&>p]:mb-5
+
+            [&>h2]:mt-8 [&>h2]:mb-4 [&>h2]:text-2xl [&>h2]:font-bold
+            [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:text-xl [&>h3]:font-semibold
+
+            [&>ul]:mb-5 [&>ul]:pl-5 [&>ul]:list-disc
+            [&>ol]:mb-5 [&>ol]:pl-5 [&>ol]:list-decimal
+
+            [&_img]:rounded-xl
+            [&_img]:w-full
+  "
+  dangerouslySetInnerHTML={{
+    __html: berita.isi || "",
+  }}
+/>
+
+{/* DISCLAIMER AUTO SETIAP ARTIKEL */}
+<DisclaimerPentasTV />
         </article>
 
         {/* SIDEBAR */}

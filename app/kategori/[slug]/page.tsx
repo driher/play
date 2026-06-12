@@ -3,9 +3,30 @@ import NewsImage from "@/components/NewsImage";
 
 export const revalidate = 60;
 
-// =========================
-// SIMPLE SAFE IMAGE
-// =========================
+/* =========================
+   FORMAT TANGGAL WIB
+========================= */
+function formatTanggalIndonesia(dateString?: string) {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) return "-";
+
+  return date.toLocaleString("id-ID", {
+    timeZone: "Asia/Jakarta",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/* =========================
+   SAFE IMAGE
+========================= */
 function getImage(item: any) {
   const base = "https://cms.pentas.tv";
 
@@ -15,39 +36,46 @@ function getImage(item: any) {
     item?.gambar ||
     "";
 
-  if (!img) return "https://via.placeholder.com/600x400";
+  if (!img) {
+    return "https://via.placeholder.com/600x400?text=Pentas+TV";
+  }
 
-  // fix escaped url dari API (\ /)
   img = img.replace(/\\/g, "");
 
-  // kalau sudah full URL
-  if (img.startsWith("http")) return img;
+  if (img.startsWith("http")) {
+    return img;
+  }
 
-  // pastikan ada slash
-  if (!img.startsWith("/")) img = "/" + img;
+  if (!img.startsWith("/")) {
+    img = "/" + img;
+  }
 
   return base + img;
 }
 
-export default async function Page({ params, searchParams }: any) {
-  // =========================
-  // FIX NEXT.JS 15 (IMPORTANT)
-  // =========================
+export default async function Page({
+  params,
+  searchParams,
+}: any) {
+
   const { slug } = await params;
   const sp = await searchParams;
 
   const page = Number(sp?.page || 1);
   const limit = Number(sp?.limit || 20);
 
-  // =========================
-  // FETCH DATA
-  // =========================
   const res = await fetch(
     `https://cms.pentas.tv/api/kategori.php?slug=${slug}&page=${page}&limit=${limit}`,
     {
-      next: { revalidate: 60 },
+      next: {
+        revalidate: 60,
+      },
     }
   );
+
+  if (!res.ok) {
+    throw new Error("Gagal mengambil data kategori");
+  }
 
   const json = await res.json();
 
@@ -59,74 +87,115 @@ export default async function Page({ params, searchParams }: any) {
     <main className="min-h-screen bg-slate-50">
 
       {/* HEADER */}
-      <div className="bg-gradient-to-r from-blue-900 to-red-600 text-white p-6">
-        <h1 className="text-2xl font-bold">
-          Kategori: {json?.nama_kategori || slug}
-        </h1>
+      <div className="bg-gradient-to-r from-blue-900 to-red-600 text-white">
 
-        <div className="text-sm opacity-90 mt-2">
-          Total: {total} berita
+        <div className="max-w-6xl mx-auto px-4 py-8">
+
+          <h1 className="text-3xl font-bold">
+            {json?.nama_kategori || slug}
+          </h1>
+
+          <p className="mt-2 text-sm opacity-90">
+            Total {total} berita
+          </p>
+
         </div>
+
       </div>
 
-      {/* GRID */}
-      <div className="max-w-6xl mx-auto p-4 grid md:grid-cols-3 gap-4">
+      {/* CONTENT */}
+      <div className="max-w-6xl mx-auto p-4">
 
         {posts.length === 0 ? (
-          <div className="col-span-full text-center py-10 text-gray-500">
-            Tidak ada berita di kategori <b>{slug}</b>
+
+          <div className="bg-white rounded-xl p-10 text-center shadow">
+
+            <h2 className="font-semibold text-lg mb-2">
+              Belum ada berita
+            </h2>
+
+            <p className="text-gray-500">
+              Tidak ada berita pada kategori ini.
+            </p>
+
           </div>
+
         ) : (
-          posts.map((item: any) => (
-            <Link
-              key={item.id}
-              href={`/berita/${item.slug}`}
-              className="bg-white rounded shadow overflow-hidden hover:shadow-lg transition"
-            >
 
-              {/* IMAGE */}
-              <NewsImage
-                src={getImage(item)}
-                alt={item.judul}
-              />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
 
-              {/* CONTENT */}
-              <div className="p-3">
-                <h2 className="font-semibold line-clamp-2">
-                  {item.judul}
-                </h2>
+            {posts.map((item: any) => (
 
-                {item.publish_date && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {new Date(item.publish_date).toLocaleDateString("id-ID")}
+              <Link
+                key={item.id}
+                href={`/berita/${item.slug}`}
+                className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition"
+              >
+
+                <NewsImage
+                  src={getImage(item)}
+                  alt={item.judul}
+                />
+
+                <div className="p-4">
+
+                  <h2 className="font-semibold line-clamp-2 mb-2">
+                    {item.judul}
+                  </h2>
+
+                  <p className="text-xs text-gray-500">
+                    {formatTanggalIndonesia(item.display_date)}
                   </p>
-                )}
-              </div>
 
-            </Link>
-          ))
+                  {item.deskripsi && (
+                    <p className="text-sm text-gray-600 mt-3 line-clamp-3">
+                      {item.deskripsi}
+                    </p>
+                  )}
+
+                </div>
+
+              </Link>
+
+            ))}
+
+          </div>
+
         )}
 
       </div>
 
       {/* PAGINATION */}
-      <div className="max-w-6xl mx-auto p-6 flex flex-wrap gap-2">
+      {totalPages > 1 && (
 
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-          <Link
-            key={p}
-            href={`/kategori/${slug}?page=${p}&limit=${limit}`}
-            className={`px-3 py-1 rounded border ${
-              p === page
-                ? "bg-blue-700 text-white"
-                : "bg-white hover:bg-gray-100"
-            }`}
-          >
-            {p}
-          </Link>
-        ))}
+        <div className="max-w-6xl mx-auto px-4 pb-10">
 
-      </div>
+          <div className="flex flex-wrap gap-2 justify-center">
+
+            {Array.from(
+              { length: totalPages },
+              (_, i) => i + 1
+            ).map((p) => (
+
+              <Link
+                key={p}
+                href={`/kategori/${slug}?page=${p}&limit=${limit}`}
+                className={
+                  p === page
+                    ? "px-4 py-2 rounded bg-red-600 text-white"
+                    : "px-4 py-2 rounded bg-white border hover:bg-gray-50"
+                }
+              >
+                {p}
+              </Link>
+
+            ))}
+
+          </div>
+
+        </div>
+
+      )}
 
     </main>
   );

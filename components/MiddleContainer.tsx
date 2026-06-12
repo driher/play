@@ -9,6 +9,26 @@ export default function MiddleContainer({ berita }: Props) {
   const left = berita.slice(0, 12);
   const right = berita.slice(6, 10);
 
+/* =========================
+   FORMAT TANGGAL
+========================= */
+function formatTanggalIndonesia(dateString?: string) {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) return "-";
+
+  return date.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
   return (
     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
 
@@ -28,7 +48,11 @@ export default function MiddleContainer({ berita }: Props) {
               </Link>
 
               <div className="text-xs text-gray-500">
-                {formatDateTV(item.created_at)}
+                                  <p className="text-xs text-gray-500">
+                     {formatTanggalIndonesia(
+    item.publish_date || item.created_at
+  )}
+                  </p>
               </div>
             </div>
 
@@ -53,7 +77,9 @@ export default function MiddleContainer({ berita }: Props) {
             </Link>
 
             <div className="text-xs text-gray-500">
-              {formatDateTV(item.created_at)}
+                                <p className="text-xs text-gray-500">
+                    {formatTanggalIndonesia(item.publish_date)}
+                  </p>
             </div>
 
           </div>
