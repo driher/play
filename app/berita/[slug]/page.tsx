@@ -137,9 +137,11 @@ export async function generateMetadata(
     };
   }
 
-  const image =
-    berita.thumbnail ||
-    "https://web.pentas.tv/og-image.jpg";
+  const image = berita.thumbnail
+  ? berita.thumbnail.startsWith("http")
+    ? berita.thumbnail
+    : `https://cms.pentas.tv/${berita.thumbnail.replace(/^\/+/, "")}`
+  : "https://web.pentas.tv/og-image.jpg";
 
   const description =
     berita.ringkasan ||
@@ -155,23 +157,37 @@ export async function generateMetadata(
     },
 
     openGraph: {
-      title: berita.judul,
-      description,
-      url: `https://web.pentas.tv/berita/${slug}`,
-      siteName: "Pentas TV",
-      locale: "id_ID",
-      type: "article",
+  title: berita.judul,
+  description,
+  url: `https://web.pentas.tv/berita/${slug}`,
+  siteName: "Pentas TV",
+  locale: "id_ID",
+  type: "article",
 
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 630,
-          alt: berita.judul,
-        },
-      ],
+  publishedTime:
+    berita.publish_date ||
+    berita.created_at,
+
+  modifiedTime:
+    berita.updated_at ||
+    berita.publish_date ||
+    berita.created_at,
+
+  authors: ["Pentas TV"],
+
+  images: [
+    {
+      url: image,
+      width: 1200,
+      height: 630,
+      alt: berita.judul,
     },
+  ],
+},
 
+other: {
+  "fb:app_id": "1234567890",
+},
     twitter: {
       card: "summary_large_image",
       title: berita.judul,
@@ -180,6 +196,7 @@ export async function generateMetadata(
     },
   };
 }
+
 
 /* =========================
    PAGE

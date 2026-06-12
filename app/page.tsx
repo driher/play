@@ -54,18 +54,20 @@ function formatTanggalIndonesia(dateString?: string) {
                   className="w-full h-[420px] object-cover"
                 />
 
+
                 <div className="p-5">
+		<p className="text-gray-500 text-sm mt-2">
+  {formatTanggalIndonesia(
+    headline.publish_date || headline.created_at
+  )}
+</p>
                   <Link href={`/berita/${headline.slug}`}>
                     <h2 className="text-2xl font-bold hover:text-red-600">
                       {headline.judul}
                     </h2>
                   </Link>
 
-<p className="text-gray-500 text-sm mt-2">
-  {formatTanggalIndonesia(
-    headline.publish_date || headline.created_at
-  )}
-</p>
+
                 </div>
               </>
             )}
@@ -93,9 +95,11 @@ function formatTanggalIndonesia(dateString?: string) {
                     </p>
                   </Link>
 
-                  <p className="text-xs text-gray-500">
-                    {formatTanggalIndonesia(item.publish_date)}
-                  </p>
+<p className="text-gray-500 text-sm mt-2">
+  {formatTanggalIndonesia(
+    headline.publish_date || headline.created_at
+  )}
+</p>
                 </div>
               </div>
             ))}

@@ -17,6 +17,25 @@ export default function FeaturedCards({
 
   const limitedItems = items.slice(1, 4);
 
+/* =========================
+   FORMAT TANGGAL
+========================= */
+function formatTanggalIndonesia(dateString?: string) {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) return "-";
+
+  return date.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
   return (
     <section className="w-full py-10">
       
@@ -44,9 +63,11 @@ export default function FeaturedCards({
                   {item.judul}
                 </h3>
 
-                <p className="text-[11px] text-gray-500 mt-2">
-                  {item.created_at}
-                </p>
+<p className="text-gray-500 text-xs mt-3">
+  {formatTanggalIndonesia(
+    item.publish_date || item.created_at
+  )}
+</p>
               </div>
             </Link>
           ))}
