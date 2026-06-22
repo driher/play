@@ -25,6 +25,7 @@ function formatTanggalIndonesia(dateString?: string) {
     minute: "2-digit",
   });
 }
+
 /* =========================
    FETCH DETAIL BERITA
 ========================= */
@@ -32,24 +33,16 @@ async function getBerita(slug: string) {
   try {
     const res = await fetch(
       `https://cms.pentas.tv/api/detail.php?slug=${encodeURIComponent(slug)}`,
-      {
-        next: {
-          revalidate: 300,
-        },
-      }
+      { next: { revalidate: 300 } }
     );
 
     if (!res.ok) return null;
 
     const json = await res.json();
-
     const data = json?.data || null;
 
     if (!data) return null;
 
-    // =========================
-    // NORMALISASI KATEGORI
-    // =========================
     const kategori =
       Array.isArray(data.kategori)
         ? data.kategori
@@ -73,17 +66,31 @@ async function getTrending() {
   try {
     const res = await fetch(
       "https://cms.pentas.tv/api/berita.php",
-      {
-        next: {
-          revalidate: 300,
-        },
-      }
+      { next: { revalidate: 300 } }
     );
 
     if (!res.ok) return [];
 
     const json = await res.json();
+    return json?.data || [];
+  } catch {
+    return [];
+  }
+}
 
+/* =========================
+   FETCH RELATED (FIXED)
+========================= */
+async function getRelated(slug: string) {
+  try {
+    const res = await fetch(
+      `https://cms.pentas.tv/api/related.php?slug=${slug}`,
+      { next: { revalidate: 300 } }
+    );
+
+    if (!res.ok) return [];
+
+    const json = await res.json();
     return json?.data || [];
   } catch {
     return [];
@@ -122,7 +129,7 @@ function DisclaimerPentasTV() {
 }
 
 /* =========================
-   SEO / OG / WHATSAPP
+   SEO / OG / TWITTER
 ========================= */
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
@@ -132,21 +139,17 @@ export async function generateMetadata(
   const berita = await getBerita(slug);
 
   if (!berita) {
-    return {
-      title: "Berita Tidak Ditemukan | Pentas TV",
-    };
+    return { title: "Berita Tidak Ditemukan | Pentas TV" };
   }
 
   const image = berita.thumbnail
-  ? berita.thumbnail.startsWith("http")
-    ? berita.thumbnail
-    : `https://cms.pentas.tv/${berita.thumbnail.replace(/^\/+/, "")}`
-  : "https://web.pentas.tv/og-image.jpg";
+    ? berita.thumbnail.startsWith("http")
+      ? berita.thumbnail
+      : `https://cms.pentas.tv/${berita.thumbnail.replace(/^\/+/, "")}`
+    : "https://web.pentas.tv/og-image.jpg";
 
   const description =
-    berita.ringkasan ||
-    berita.excerpt ||
-    berita.judul;
+    berita.ringkasan || berita.excerpt || berita.deskripsi || berita.judul;
 
   return {
     title: berita.judul,
@@ -157,37 +160,26 @@ export async function generateMetadata(
     },
 
     openGraph: {
-  title: berita.judul,
-  description,
-  url: `https://web.pentas.tv/berita/${slug}`,
-  siteName: "Pentas TV",
-  locale: "id_ID",
-  type: "article",
+      title: berita.judul,
+      description,
+      url: `https://web.pentas.tv/berita/${slug}`,
+      siteName: "Pentas TV",
+      locale: "id_ID",
+      type: "article",
 
-  publishedTime:
-    berita.publish_date ||
-    berita.created_at,
+      publishedTime: berita.publish_date || berita.created_at,
+      modifiedTime: berita.updated_at || berita.created_at,
 
-  modifiedTime:
-    berita.updated_at ||
-    berita.publish_date ||
-    berita.created_at,
-
-  authors: ["Pentas TV"],
-
-  images: [
-    {
-      url: image,
-      width: 1200,
-      height: 630,
-      alt: berita.judul,
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: berita.judul,
+        },
+      ],
     },
-  ],
-},
 
-other: {
-  "fb:app_id": "1234567890",
-},
     twitter: {
       card: "summary_large_image",
       title: berita.judul,
@@ -196,7 +188,6 @@ other: {
     },
   };
 }
-
 
 /* =========================
    PAGE
@@ -210,56 +201,49 @@ export default async function Page({
 
   const berita = await getBerita(slug);
 
-  if (!berita) {
-    notFound();
-  }
+  if (!berita) notFound();
 
   const trending = await getTrending();
+  const related = await getRelated(slug);
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-6">
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-        {/* ARTIKEL */}
+        {/* =========================
+           ARTIKEL
+        ========================= */}
         <article className="md:col-span-2">
 
-          <div className="text-xs text-red-600 font-bold uppercase mb-2">
-            <div className="text-xs text-red-600 font-bold uppercase mb-2 flex flex-wrap gap-2">
-  {berita.kategori?.map((kat: string, i: number) => (
-    <span key={i} className="bg-red-100 px-2 py-1 rounded">
-      {kat}
-    </span>
-  ))}
-</div>
+          {/* KATEGORI */}
+          <div className="flex flex-wrap gap-2 mb-2 text-xs text-red-600 font-bold uppercase">
+            {berita.kategori?.map((kat: string, i: number) => (
+              <span key={i} className="bg-red-100 px-2 py-1 rounded">
+                {kat}
+              </span>
+            ))}
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-4">
+          {/* JUDUL */}
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">
             {berita.judul}
           </h1>
 
+          {/* META */}
           <div className="flex flex-wrap gap-3 text-sm text-gray-500 mb-5">
-  
-  <span>✍ {berita.author || "Pentas TV"}</span>
+            <span>✍ {berita.author || "Pentas TV"}</span>
+            <span>
+              🕒 {formatTanggalIndonesia(berita.publish_date || berita.created_at)}
+            </span>
+          </div>
 
-  <span>👁 {berita.views || 0}</span>
-
-  <span>
- <span>
-  🕒{" "}
-  {formatTanggalIndonesia(
-    berita.publish_date || berita.created_at
-  )}
-</span>
-  </span>
-
-</div>
-
+          {/* SHARE BUTTON */}
           <ShareButtons title={berita.judul} />
 
+          {/* THUMBNAIL */}
           {berita.thumbnail && (
             <div className="mb-8 mt-5">
-
               <Image
                 src={berita.thumbnail}
                 alt={berita.judul}
@@ -269,58 +253,75 @@ export default async function Page({
                 priority
               />
 
+              {/* MEDIA CAPTION */}
               {(berita.media?.caption ||
                 berita.media?.credit ||
                 berita.media?.source) && (
                 <p className="text-xs text-gray-500 italic mt-2">
                   {berita.media?.caption}
-
-                  {berita.media?.credit &&
-                    ` | Credit: ${berita.media.credit}`}
-
-                  {berita.media?.source &&
-                    ` | Source: ${berita.media.source}`}
+                  {berita.media?.credit && ` | Credit: ${berita.media.credit}`}
+                  {berita.media?.source && ` | Source: ${berita.media.source}`}
                 </p>
               )}
             </div>
           )}
 
-   <div
-  className="
-    prose
-    prose-lg
-    max-w-none
-    prose-headings:font-bold
-    prose-headings:text-gray-900
-    prose-p:text-gray-700
-    prose-p:leading-8
-    prose-a:text-red-600
-    prose-img:rounded-xl
-    prose-img:shadow-md
-    prose-blockquote:border-red-600
-    prose-blockquote:text-gray-700
-    prose-li:marker:text-red-600
-    [&>p]:mb-5
-
+          {/* ISI BERITA */}
+          <div
+            className="prose prose-lg max-w-none
+            prose-headings:font-bold
+            prose-headings:text-gray-900
+            prose-p:text-gray-700
+            prose-p:leading-8
+            prose-a:text-red-600
+            prose-img:rounded-xl
+            prose-img:shadow-md
+            prose-blockquote:border-red-600
+            prose-blockquote:text-gray-700
+            prose-li:marker:text-red-600
+            [&>p]:mb-5
             [&>h2]:mt-8 [&>h2]:mb-4 [&>h2]:text-2xl [&>h2]:font-bold
             [&>h3]:mt-6 [&>h3]:mb-3 [&>h3]:text-xl [&>h3]:font-semibold
-
             [&>ul]:mb-5 [&>ul]:pl-5 [&>ul]:list-disc
             [&>ol]:mb-5 [&>ol]:pl-5 [&>ol]:list-decimal
+            [&_img]:rounded-xl [&_img]:w-full"
+            dangerouslySetInnerHTML={{ __html: berita.isi || "" }}
+          />
 
-            [&_img]:rounded-xl
-            [&_img]:w-full
-  "
-  dangerouslySetInnerHTML={{
-    __html: berita.isi || "",
-  }}
-/>
+          {/* =========================
+             BACA JUGA (RELATED)
+          ========================= */}
+          <div className="mt-10 border-t pt-6">
+            <h3 className="text-lg font-bold text-red-600 mb-4">
+              Baca Juga
+            </h3>
 
-{/* DISCLAIMER AUTO SETIAP ARTIKEL */}
-<DisclaimerPentasTV />
+            <div className="space-y-3">
+              {related?.length > 0 ? (
+                related.map((item: any) => (
+                  <Link
+                    key={item.id}
+                    href={`/berita/${item.slug}`}
+                    className="block text-sm hover:text-red-600 border-b pb-2"
+                  >
+                    {item.judul}
+                  </Link>
+                ))
+              ) : (
+                <p className="text-xs text-gray-400">
+                  Tidak ada berita terkait
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* DISCLAIMER */}
+          <DisclaimerPentasTV />
         </article>
 
-        {/* SIDEBAR */}
+        {/* =========================
+           SIDEBAR
+        ========================= */}
         <aside className="bg-gray-50 border rounded-xl p-5 h-fit sticky top-20">
 
           <h2 className="font-bold text-red-600 text-lg mb-4">
@@ -328,7 +329,6 @@ export default async function Page({
           </h2>
 
           <div className="space-y-3">
-
             {trending
               ?.filter((item: any) => item.slug !== slug)
               .slice(0, 10)
@@ -341,13 +341,11 @@ export default async function Page({
                   {item.judul}
                 </Link>
               ))}
-
           </div>
 
         </aside>
 
       </div>
-
     </main>
   );
 }

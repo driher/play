@@ -68,7 +68,7 @@ export default function Home() {
   }, []);
 
   const headline = berita[0];
-  const sidebar = berita.slice(0, 12);
+  const sidebar = berita.slice(4, 15);
   const featuredItems = berita.slice(0, 4);
 
   return (

@@ -68,8 +68,8 @@ export default function Home() {
   }, []);
 
   const headline = berita[0];
-  const sidebar = berita.slice(7, 20);
-  const featuredItems = berita.slice(0, 12);
+  const sidebar = berita.slice(0, 12);
+  const featuredItems = berita.slice(0, 4);
 
   return (
     <main className="bg-gray-100 min-h-screen">
