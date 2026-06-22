@@ -151,9 +151,36 @@ export async function generateMetadata(
   const description =
     berita.ringkasan || berita.excerpt || berita.deskripsi || berita.judul;
 
-  return {
-    title: berita.judul,
-    description,
+return {
+  title: berita.judul,
+
+  description,
+
+  keywords: [
+    berita.judul,
+    ...(berita.kategori || []),
+    "Berita Hari Ini",
+    "Pentas TV",
+    "Berita Indonesia",
+  ],
+
+  authors: [
+    {
+      name: berita.author || "Pentas TV",
+    },
+  ],
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+      "max-snippet": -1,
+    },
+  },
 
     alternates: {
       canonical: `https://web.pentas.tv/berita/${slug}`,
@@ -202,20 +229,126 @@ export default async function Page({
   const berita = await getBerita(slug);
 
   if (!berita) notFound();
+  const image =
+  berita.thumbnail?.startsWith("http")
+    ? berita.thumbnail
+    : `https://cms.pentas.tv/${berita.thumbnail}`;
+
+const newsSchema = {
+  "@context": "https://schema.org",
+
+  "@type": "NewsArticle",
+
+  headline: berita.judul,
+
+  image: [image],
+
+  datePublished:
+    berita.publish_date ||
+    berita.created_at,
+
+  dateModified:
+    berita.updated_at ||
+    berita.created_at,
+
+  author: {
+    "@type": "Person",
+    name:
+      berita.author ||
+      "Pentas TV",
+  },
+
+  publisher: {
+    "@type": "Organization",
+
+    name: "Pentas TV",
+
+    logo: {
+      "@type": "ImageObject",
+      url:
+        "https://web.pentas.tv/logo.png",
+    },
+  },
+
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id":
+      `https://web.pentas.tv/berita/${slug}`,
+  },
+};
 
   const trending = await getTrending();
   const related = await getRelated(slug);
+  const plainText =
+  berita.isi
+    ?.replace(/<[^>]+>/g, "")
+    ?.trim() || "";
+
+const readingTime = Math.max(
+  1,
+  Math.ceil(
+    plainText.split(/\s+/).length / 220
+  )
+);
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-6">
+
+    <script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify(
+      newsSchema
+    ),
+  }}
+/>
+
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context":
+        "https://schema.org",
+
+      "@type":
+        "BreadcrumbList",
+
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item:
+            "https://web.pentas.tv",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Berita",
+          item:
+            "https://web.pentas.tv/berita",
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name:
+            berita.judul,
+        },
+      ],
+    }),
+  }}
+/>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
         {/* =========================
            ARTIKEL
         ========================= */}
-        <article className="md:col-span-2">
-
+        <article
+  className="md:col-span-2"
+  itemScope
+  itemType="https://schema.org/NewsArticle"
+>
           {/* KATEGORI */}
           <div className="flex flex-wrap gap-2 mb-2 text-xs text-red-600 font-bold uppercase">
             {berita.kategori?.map((kat: string, i: number) => (
@@ -226,12 +359,18 @@ export default async function Page({
           </div>
 
           {/* JUDUL */}
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
+          <h1
+  itemProp="headline"
+  className="text-3xl md:text-4xl font-bold mb-4"
+>
             {berita.judul}
           </h1>
 
           {/* META */}
           <div className="flex flex-wrap gap-3 text-sm text-gray-500 mb-5">
+	  <span>
+  📖 {readingTime} menit baca
+</span>
             <span>✍ {berita.author || "Pentas TV"}</span>
             <span>
               🕒 {formatTanggalIndonesia(berita.publish_date || berita.created_at)}
@@ -267,8 +406,9 @@ export default async function Page({
           )}
 
           {/* ISI BERITA */}
-          <div
-            className="prose prose-lg max-w-none
+            <div
+		itemProp="articleBody"
+		className="prose prose-lg max-w-none
             prose-headings:font-bold
             prose-headings:text-gray-900
             prose-p:text-gray-700
