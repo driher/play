@@ -429,61 +429,99 @@ const readingTime = Math.max(
           />
 
           {/* =========================
-             BACA JUGA (RELATED)
-          ========================= */}
-          <div className="mt-10 border-t pt-6">
-            <h3 className="text-lg font-bold text-red-600 mb-4">
-              Baca Juga
-            </h3>
+    BACA JUGA (RELATED)
+========================= */}
+<div className="mt-10 rounded-2xl bg-surface border border-border p-6 shadow-sm">
 
-            <div className="space-y-3">
-              {related?.length > 0 ? (
-                related.map((item: any) => (
-                  <Link
-                    key={item.id}
-                    href={`/berita/${item.slug}`}
-                    className="block text-sm hover:text-red-600 border-b pb-2"
-                  >
-                    {item.judul}
-                  </Link>
-                ))
-              ) : (
-                <p className="text-xs text-gray-400">
-                  Tidak ada berita terkait
-                </p>
-              )}
-            </div>
-          </div>
+  <h3 className="mb-5 text-lg font-bold text-primary border-b border-border pb-3">
+    Baca Juga
+  </h3>
+
+  <div className="space-y-3">
+
+    {related?.length > 0 ? (
+      related.map((item: any) => (
+        <Link
+          key={item.id}
+          href={`/berita/${item.slug}`}
+          className="
+            block
+            rounded-xl
+            bg-background
+            border
+            border-border
+            p-4
+            text-sm
+            font-medium
+            text-foreground
+            transition-all
+            duration-300
+            hover:border-primary
+            hover:text-primary
+            hover:shadow-md
+          "
+        >
+          {item.judul}
+        </Link>
+      ))
+    ) : (
+      <p className="text-sm text-muted">
+        Tidak ada berita terkait.
+      </p>
+    )}
+
+  </div>
+
+</div>
 
           {/* DISCLAIMER */}
           <DisclaimerPentasTV />
         </article>
 
-        {/* =========================
-           SIDEBAR
-        ========================= */}
-        <aside className="bg-gray-50 border rounded-xl p-5 h-fit sticky top-20">
+      {/* =========================
+    SIDEBAR
+========================= */}
+<aside className="sticky top-20 h-fit rounded-2xl border border-border bg-surface p-5 shadow-sm transition-colors duration-300">
 
-          <h2 className="font-bold text-red-600 text-lg mb-4">
-            Berita Lainnya
-          </h2>
+  <h2 className="mb-5 border-b border-border pb-3 text-lg font-bold text-primary">
+    Berita Lainnya
+  </h2>
 
-          <div className="space-y-3">
-            {trending
-              ?.filter((item: any) => item.slug !== slug)
-              .slice(0, 10)
-              .map((item: any) => (
-                <Link
-                  key={item.id}
-                  href={`/berita/${item.slug}`}
-                  className="block text-sm hover:text-red-600 transition border-b pb-3"
-                >
-                  {item.judul}
-                </Link>
-              ))}
-          </div>
+  <div className="space-y-3">
 
-        </aside>
+    {trending
+      ?.filter((item: any) => item.slug !== slug)
+      .slice(0, 10)
+      .map((item: any) => (
+        <Link
+          key={item.id}
+          href={`/berita/${item.slug}`}
+          className="
+            block
+            rounded-lg
+            border
+            border-border
+            bg-background
+            px-4
+            py-3
+            text-sm
+            font-medium
+            text-foreground
+            transition-all
+            duration-300
+            hover:border-primary
+            hover:bg-surface
+            hover:text-primary
+            hover:shadow-md
+          "
+        >
+          {item.judul}
+        </Link>
+      ))}
+
+  </div>
+
+</aside>
 
       </div>
     </main>

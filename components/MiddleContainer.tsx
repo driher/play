@@ -1,91 +1,126 @@
 "use client";
 
-import { formatDateTV } from "@/lib/formatDate";
 import Link from "next/link";
 
-type Props = { berita: any[] };
+type Props = {
+  berita: any[];
+};
 
 export default function MiddleContainer({ berita }: Props) {
   const left = berita.slice(0, 12);
   const right = berita.slice(6, 10);
 
-/* =========================
-   FORMAT TANGGAL
-========================= */
-function formatTanggalIndonesia(dateString?: string) {
-  if (!dateString) return "-";
+  /* =========================
+     FORMAT TANGGAL
+  ========================= */
+  function formatTanggalIndonesia(dateString?: string) {
+    if (!dateString) return "-";
 
-  const date = new Date(dateString);
+    const date = new Date(dateString);
 
-  if (isNaN(date.getTime())) return "-";
+    if (isNaN(date.getTime())) return "-";
 
-  return date.toLocaleDateString("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+    return date.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 
   return (
     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
 
-      {/* LEFT */}
+      {/* =========================
+          LEFT CONTENT
+      ========================= */}
+
       <div className="lg:col-span-3 space-y-4">
 
         {left.map((item) => (
-          <div key={item.id} className="flex gap-4 bg-white p-3 shadow rounded">
 
-            <img src={item.thumbnail} className="w-28 h-20 object-cover rounded" />
+          <div
+            key={item.id}
+            className="flex gap-4 rounded-2xl border border-border bg-surface p-4 shadow-sm hover:shadow-lg transition-all duration-300"
+          >
 
-            <div>
+            <img
+              src={item.thumbnail}
+              alt={item.title || item.judul}
+              className="w-32 h-24 rounded-xl object-cover flex-shrink-0"
+            />
+
+            <div className="flex flex-col justify-between">
+
               <Link href={`/berita/${item.slug}`}>
-                <div className="font-semibold hover:text-red-600">
+
+                <h3 className="font-semibold leading-6 text-foreground hover:text-primary transition-colors duration-300">
+
                   {item.title || item.judul}
-                </div>
+
+                </h3>
+
               </Link>
 
-              <div className="text-xs text-gray-500">
-                                  <p className="text-xs text-gray-500">
-                     {formatTanggalIndonesia(
-    item.publish_date || item.created_at
-  )}
-                  </p>
-              </div>
+              <p className="text-xs text-muted mt-3">
+
+                {formatTanggalIndonesia(
+                  item.publish_date || item.created_at
+                )}
+
+              </p>
+
             </div>
 
           </div>
+
         ))}
+
       </div>
 
-      {/* RIGHT */}
-      <div className="space-y-3">
+      {/* =========================
+          RIGHT SIDEBAR
+      ========================= */}
 
-        <h2 className="font-bold border-b-2 border-red-600 pb-2">
+      <aside className="space-y-4">
+
+        <h2 className="text-xl font-bold text-foreground border-b-2 border-primary pb-2">
           Berita Lainnya
         </h2>
 
         {right.map((item) => (
-          <div key={item.id} className="bg-white p-3 shadow rounded">
+
+          <div
+            key={item.id}
+            className="rounded-2xl border border-border bg-surface p-4 shadow-sm hover:shadow-lg transition-all duration-300"
+          >
 
             <Link href={`/berita/${item.slug}`}>
-              <div className="text-sm font-semibold hover:text-red-600">
+
+              <h3 className="text-sm font-semibold leading-6 text-foreground hover:text-primary transition-colors duration-300">
+
                 {item.title || item.judul}
-              </div>
+
+              </h3>
+
             </Link>
 
-            <div className="text-xs text-gray-500">
-                                <p className="text-xs text-gray-500">
-                    {formatTanggalIndonesia(item.publish_date)}
-                  </p>
-            </div>
+            <p className="text-xs text-muted mt-3">
+
+              {formatTanggalIndonesia(
+                item.publish_date || item.created_at
+              )}
+
+            </p>
 
           </div>
+
         ))}
 
-      </div>
+      </aside>
+
     </div>
   );
 }

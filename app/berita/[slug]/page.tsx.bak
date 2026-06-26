@@ -408,7 +408,7 @@ const readingTime = Math.max(
           {/* ISI BERITA */}
             <div
 		itemProp="articleBody"
-		className="prose prose-lg max-w-none"
+		className="prose prose-lg max-w-none
             prose-headings:font-bold
             prose-headings:text-gray-900
             prose-p:text-gray-700
@@ -429,31 +429,50 @@ const readingTime = Math.max(
           />
 
           {/* =========================
-             BACA JUGA (RELATED)
-          ========================= */}
-          <div className="mt-10 border-t pt-6">
-            <h3 className="text-lg font-bold text-red-600 mb-4">
-              Baca Juga
-            </h3>
+    BACA JUGA (RELATED)
+========================= */}
+<div className="mt-10 rounded-2xl bg-surface border border-border p-6 shadow-sm">
 
-            <div className="space-y-3">
-              {related?.length > 0 ? (
-                related.map((item: any) => (
-                  <Link
-                    key={item.id}
-                    href={`/berita/${item.slug}`}
-                    className="block text-sm hover:text-red-600 border-b pb-2"
-                  >
-                    {item.judul}
-                  </Link>
-                ))
-              ) : (
-                <p className="text-xs text-gray-400">
-                  Tidak ada berita terkait
-                </p>
-              )}
-            </div>
-          </div>
+  <h3 className="mb-5 text-lg font-bold text-primary border-b border-border pb-3">
+    Baca Juga
+  </h3>
+
+  <div className="space-y-3">
+
+    {related?.length > 0 ? (
+      related.map((item: any) => (
+        <Link
+          key={item.id}
+          href={`/berita/${item.slug}`}
+          className="
+            block
+            rounded-xl
+            bg-background
+            border
+            border-border
+            p-4
+            text-sm
+            font-medium
+            text-foreground
+            transition-all
+            duration-300
+            hover:border-primary
+            hover:text-primary
+            hover:shadow-md
+          "
+        >
+          {item.judul}
+        </Link>
+      ))
+    ) : (
+      <p className="text-sm text-muted">
+        Tidak ada berita terkait.
+      </p>
+    )}
+
+  </div>
+
+</div>
 
           {/* DISCLAIMER */}
           <DisclaimerPentasTV />

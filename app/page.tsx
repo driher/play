@@ -33,19 +33,16 @@ export default function Home() {
      FETCH DATA
   ========================= */
   useEffect(() => {
-    // BERITA
     fetch("https://cms.pentas.tv/api/berita.php?page=1&limit=12")
       .then((res) => res.json())
       .then((data) => setBerita(data.data || []))
       .catch(console.error);
 
-    // VIDEO
     fetch("https://cms.pentas.tv/api/youtube.php")
       .then((res) => res.json())
       .then((data) => {
         const raw = data.data || data || [];
 
-        // filter normal video (bukan shorts)
         const normalVideos = raw.filter((v: any) => {
           const url = (v.url || "").toLowerCase();
           const title = (v.title || "").toLowerCase();
@@ -72,35 +69,40 @@ export default function Home() {
   const featuredItems = berita.slice(0, 4);
 
   return (
-    <main className="bg-gray-100 min-h-screen">
+    <main className="min-h-screen bg-background text-foreground transition-colors duration-300">
 
-      <div className="w-full flex justify-center">
-        <div className="w-[90%] max-w-[1200px] grid grid-cols-1 lg:grid-cols-12 gap-5 py-3">
+      <div className="flex justify-center w-full">
+
+        <div className="w-[90%] max-w-[1200px] grid grid-cols-1 lg:grid-cols-12 gap-6 py-5">
 
           {/* =========================
               HEADLINE
           ========================= */}
-          <section className="lg:col-span-8 bg-white rounded-xl overflow-hidden shadow">
+
+          <section className="lg:col-span-8 bg-surface border border-border rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
 
             {headline && (
               <>
                 <img
                   src={headline.thumbnail}
+                  alt={headline.judul}
                   className="w-full h-[420px] object-cover"
                 />
 
-                <div className="p-5">
+                <div className="p-6">
 
-                  <p className="text-gray-500 text-sm mt-2">
+                  <p className="text-sm text-muted mb-2">
                     {formatTanggalIndonesia(
                       headline.publish_date || headline.created_at
                     )}
                   </p>
 
                   <Link href={`/berita/${headline.slug}`}>
-                    <h2 className="text-2xl font-bold hover:text-red-600">
+
+                    <h2 className="text-3xl font-bold leading-tight text-foreground hover:text-primary transition-colors duration-300">
                       {headline.judul}
                     </h2>
+
                   </Link>
 
                 </div>
@@ -110,55 +112,70 @@ export default function Home() {
             <FeaturedCards items={featuredItems} />
 
             {/* =========================
-                SHORTS SECTION
+                VIDEO
             ========================= */}
+
             {videos.length > 0 && (
-              <section className="mt-6 flex justify-center">
 
-                <div className="w-[95%] max-w-[1000px]">
+              <section className="mt-8 px-4 pb-6">
 
-                  <h3 className="font-bold text-lg mb-3">
+                <div className="max-w-[1000px] mx-auto">
+
+                  <h3 className="text-xl font-bold text-foreground mb-4">
                     🎬 Video Terbaru
                   </h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     {videos.slice(0, 3).map((v: any) => {
+
                       const isActive = currentVideo?.id === v.id;
 
                       return (
+
                         <div
                           key={v.id}
                           onClick={() => setCurrentVideo(v)}
-                          className="cursor-pointer bg-black rounded-xl overflow-hidden shadow"
+                          className="cursor-pointer rounded-2xl overflow-hidden border border-border bg-surface shadow hover:shadow-xl transition-all duration-300"
                         >
 
                           {isActive ? (
-                            <div className="aspect-video md:aspect-[9/16]">
+
+                            <div className="aspect-video md:aspect-[9/16] bg-black">
+
                               <iframe
                                 className="w-full h-full"
                                 src={`https://www.youtube.com/embed/${v.videoId}?autoplay=1&playsinline=1`}
                                 allowFullScreen
                               />
+
                             </div>
+
                           ) : (
+
                             <>
-                              <div className="aspect-video md:aspect-[9/16] bg-black">
+                              <div className="aspect-video md:aspect-[9/16] overflow-hidden">
+
                                 <img
                                   src={v.thumbnail}
-                                  className="w-full h-full object-cover hover:opacity-80"
+                                  alt={v.title}
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                                 />
+
                               </div>
 
-                              <div className="p-2 bg-white">
-                                <p className="text-xs line-clamp-2">
+                              <div className="p-3 bg-surface border-t border-border">
+
+                                <p className="text-sm text-foreground line-clamp-2">
                                   {v.title}
                                 </p>
+
                               </div>
                             </>
                           )}
 
                         </div>
+
                       );
                     })}
 
@@ -167,6 +184,7 @@ export default function Home() {
                 </div>
 
               </section>
+
             )}
 
           </section>
@@ -174,38 +192,48 @@ export default function Home() {
           {/* =========================
               SIDEBAR
           ========================= */}
+
           <aside className="lg:col-span-4 space-y-4">
 
-            <h3 className="font-bold text-lg">Berita Terbaru</h3>
+            <h3 className="text-xl font-bold text-foreground">
+              Berita Terbaru
+            </h3>
 
             {sidebar.map((item) => (
+
               <div
                 key={item.id}
-                className="flex gap-3 bg-white p-3 rounded-lg shadow"
+                className="flex gap-3 bg-surface border border-border rounded-xl p-3 shadow hover:shadow-lg transition-all duration-300"
               >
 
                 <img
                   src={item.thumbnail}
-                  className="w-20 h-20 object-cover rounded"
+                  alt={item.judul}
+                  className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
                 />
 
-                <div>
+                <div className="flex flex-col justify-between">
 
                   <Link href={`/berita/${item.slug}`}>
-                    <p className="text-sm font-semibold hover:text-red-600">
+
+                    <p className="text-sm font-semibold leading-6 text-foreground hover:text-primary transition-colors duration-300">
                       {item.judul}
                     </p>
+
                   </Link>
 
-                  <p className="text-gray-500 text-sm mt-2">
+                  <p className="text-xs text-muted mt-2">
+
                     {formatTanggalIndonesia(
                       item.publish_date || item.created_at
                     )}
+
                   </p>
 
                 </div>
 
               </div>
+
             ))}
 
           </aside>
@@ -213,11 +241,15 @@ export default function Home() {
           {/* =========================
               MIDDLE CONTENT
           ========================= */}
+
           <section className="lg:col-span-12">
+
             <MiddleContainer berita={berita} />
+
           </section>
 
         </div>
+
       </div>
 
     </main>
